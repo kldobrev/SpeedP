@@ -10,48 +10,51 @@ Symbol Table
     _DIV_REG                                                       ****** GX
     _LCDC_REG                                                      ****** GX
     __modsint                                                      ****** GX
-  0 _auto_speed_adj                                                0007FE GR
+  0 _action_cpu                                                    00073E GR
+  0 _auto_speed_adj                                                0008E7 GR
   1 _ballmvframe                                                   000005 GR
   1 _ballposx                                                      000002 GR
   1 _ballposy                                                      000003 GR
   1 _ballspeedx                                                    000000 GR
   1 _ballspeedy                                                    000001 GR
-  0 _begin_round                                                   000730 GR
-  0 _bkgborderdown                                                 000249 GR
-  0 _bkgborderup                                                   000248 GR
+  0 _begin_round                                                   000816 GR
+  0 _bkgborderdown                                                 00024C GR
+  0 _bkgborderup                                                   00024B GR
+  1 _difficulty                                                    000012 GR
+  0 _difficulty_px                                                 000241 GR
   1 _framecnt                                                      000004 GR
-  0 _get_bounce_off_dir_y                                          00039A GR
-  0 _hits_paddle                                                   000283 GR
-  0 _hits_walls                                                    00024A GR
-  0 _init_paddle                                                   000512 GR
-  0 _init_playfield                                                000695 GR
+  0 _get_bounce_off_dir_y                                          00039D GR
+  0 _hits_paddle                                                   000286 GR
+  0 _hits_walls                                                    00024D GR
+  0 _init_paddle                                                   000515 GR
+  0 _init_playfield                                                00077B GR
     _initrand                                                      ****** GX
   1 _itr                                                           000013 GR
     _joypad                                                        ****** GX
-  0 _main                                                          000800 GR
-  0 _manual_speed_adj                                              0007FF GR
-  0 _move_ball                                                     000477 GR
-  0 _move_paddle                                                   000625 GR
-  1 _padcpuspeed                                                   000008 GR
+  0 _main                                                          0008E9 GR
+  0 _manual_speed_adj                                              0008E8 GR
+  0 _move_ball                                                     00047A GR
+  0 _move_paddle                                                   000665 GR
   1 _padheight                                                     000006 GR
-  1 _padpl1speed                                                   000007 GR
-  1 _padsectors                                                    000009 GR
-  1 _pdlcpu                                                        00000F GR
-  1 _pdlpl1                                                        00000C GR
+  1 _padsectors                                                    000008 GR
+  1 _padspeed                                                      000007 GR
+  1 _pdlcpu                                                        00000E GR
+  1 _pdlpl1                                                        00000B GR
   0 _pongbkgtiles                                                  000019 GR
   0 _ponggamemap                                                   000089 GR
   0 _pongspritetiles                                               0001F1 GR
     _rand                                                          ****** GX
   1 _randindx                                                      000014 GR
   1 _randindy                                                      000015 GR
+  0 _scroll_paddle_tiles                                           000628 GR
     _set_bkg_data                                                  ****** GX
     _set_bkg_tiles                                                 ****** GX
   0 _set_pad_sectors                                               000000 GR
     _set_sprite_data                                               ****** GX
     _shadow_OAM                                                    ****** GX
-  0 _stspeedpoolx                                                  000241 GR
-  0 _stspeedpooly                                                  000243 GR
-  1 _tileind                                                       000012 GR
+  0 _stspeedpoolx                                                  000244 GR
+  0 _stspeedpooly                                                  000246 GR
+  1 _tileind                                                       000011 GR
     _wait_vbl_done                                                 ****** GX
 
 
@@ -60,7 +63,7 @@ Hexadecimal [24-Bits]
 
 Area Table
 
-   0 _CODE                                      size    818   flags    0
+   0 _CODE                                      size    901   flags    0
    1 _DATA                                      size     16   flags    0
    2 _DABS                                      size      0   flags    8
    3 _HOME                                      size      0   flags    0

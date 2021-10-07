@@ -13,13 +13,14 @@ UINT8 ballposy = 84;
 UINT8 framecnt = 0;
 UINT8 ballmvframe = 2; // controlls the ball's speed
 UINT8 padheight = 4;
-UINT8 padpl1speed = 4;
-UINT8 padcpuspeed = 4;
+UINT8 padspeed = 3; // Slow is 2, normal is 3, fast is 4
 UINT8 padsectors[3]; // Holds px values for 25%, 50% and 75% of paddle height
 Paddle pdlpl1;
 Paddle pdlcpu;
 UINT8 tileind = 0;
+UINT8 difficulty = 0; // 0 - easy, 1 - normal, 2 - hard
 UINT8 itr, randindx, randindy; // used in loops
+const UINT8 difficulty_px[3] = {84, 42, 8};
 const INT8 stspeedpoolx[2] = {-4, 4};
 const INT8 stspeedpooly[5] = {-4, -2, 0, 2, 4};
 const UINT8 bkgborderup = 32;
@@ -29,7 +30,8 @@ const UINT8 bkgborderdown = 144;
 void set_pad_sectors();
 void move_ball(Paddle * ppl1, Paddle * pcpu);
 void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy);
-void move_paddle(Paddle * pdl, UINT8 pdlsp);
+void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp);
+void move_paddle(Paddle * pdl, INT8 pdlsp);
 void auto_speed_adj();
 void manual_speed_adj();
 void init_playfield();
@@ -77,7 +79,7 @@ void move_ball(Paddle * ppl1, Paddle * pcpu) {
     UINT8 nextballposx = ballposx + ballspeedx;
     UINT8 nextballposy = ballposy + ballspeedy;
     if(hits_walls(nextballposy, 8)) {
-        ballspeedy *= -1; // Bounce off wall
+        ballspeedy *= -1;
     }
     if(hits_paddle(nextballposx, nextballposy, ppl1)) {
         ballspeedx *= -1;
@@ -121,13 +123,28 @@ void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy) {
     
 }
 
-void move_paddle(Paddle * pdl, UINT8 pdlsp) {
-    UINT8 nextpdly = pdl->y + pdlsp;
-    if(!hits_walls(nextpdly, padheight *8)) {
+void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp) {
         for(itr = 0; itr != padheight; itr++) {
             scroll_sprite(pdl->firsttile + itr, 0, pdlsp);
         }
-        pdl->y += pdlsp;
+}
+
+void move_paddle(Paddle * pdl, INT8 pdlspd) {
+    UINT8 nextpdly = pdl->y + pdlspd;
+    if(!hits_walls(nextpdly, padheight * 8)) {
+        scroll_paddle_tiles(pdl, pdlspd);
+        pdl->y += pdlspd;
+    } else if(pdl->y > bkgborderup || pdl->y + padheight * 8 < bkgborderdown) {
+        // Adjustment for different scroll speeds when paddle is near the edge of the field
+        UINT8 adjspd = pdlspd < 0 ? bkgborderup - pdl->y : bkgborderdown - (pdl->y + padheight * 8);
+        scroll_paddle_tiles(pdl, adjspd);
+        pdl->y += adjspd;
+    }
+}
+
+void action_cpu() {
+    if(ballposx > difficulty_px[difficulty]) { // Determine when the cpu will react to the ball's position
+        move_paddle(&pdlcpu, pdlcpu.y < ballposy ? padspeed : -padspeed);
     }
 }
 
@@ -169,16 +186,18 @@ void begin_round() {
 
         switch(joypad()) {
             case J_UP:
-                move_paddle(&pdlpl1, -padpl1speed);
+                move_paddle(&pdlpl1, -padspeed);
                 break;
             case J_DOWN:
-                move_paddle(&pdlpl1, padpl1speed);
+                move_paddle(&pdlpl1, padspeed);
                 break;
         }
 
         if(framecnt == ballmvframe) {
             move_ball(&pdlpl1, &pdlcpu);
         }
+
+        action_cpu();
 
         wait_vbl_done();
     }
