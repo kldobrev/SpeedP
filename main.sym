@@ -9,82 +9,103 @@ Symbol Table
     .__.H$L.                                                    =  000000 L
     _DIV_REG                                                       ****** GX
     _LCDC_REG                                                      ****** GX
+    _WX_REG                                                        ****** GX
+    _WY_REG                                                        ****** GX
+    __divsint                                                      ****** GX
     __modsint                                                      ****** GX
-  0 _action_cpu                                                    00075B GR
-  0 _auto_speed_adj                                                00079C GR
-  1 _autospeedflg                                                  00001A GR
+  0 _action_cpu                                                    000A58 GR
+  0 _auto_speed_adj                                                000A99 GR
+  1 _autospeedflg                                                  00001B GR
   1 _ball                                                          00000E GR
   1 _ballmvframe                                                   000001 GR
-  0 _begin_round                                                   000923 GR
-  0 _bkgborderdown                                                 00024D GR
-  0 _bkgborderup                                                   00024C GR
-  1 _chspeedflgdir                                                 00001B GR
-  1 _cpuscore                                                      000018 GR
-  0 _default_settings                                              000A94 GR
+  0 _begin_round                                                   000E00 GR
+  0 _bkgborderdown                                                 0004F5 GR
+  0 _bkgborderup                                                   0004F4 GR
+  0 _center_ball                                                   00051E GR
+  1 _chspeedflgdir                                                 00001C GR
+  1 _cpuscore                                                      000019 GR
+  0 _default_settings                                              000504 GR
   1 _difficulty                                                    000013 GR
-  0 _difficulty_px                                                 000242 GR
-  1 _exitgameflg                                                   000019 GR
+  0 _difficulty_px                                                 0004EA GR
+  0 _display_round_num                                             000C02 GR
+  0 _erase_round_num                                               000C42 GR
+  1 _exitgameflg                                                   00001A GR
+    _fill_bkg_rect                                                 ****** GX
   1 _framecnt                                                      000000 GR
-  0 _get_bounce_off_dir_y                                          0003A1 GR
-  0 _hits_paddle                                                   00028A GR
-  0 _hits_walls                                                    000251 GR
-  0 _init_game                                                     0007E7 GR
-  0 _init_paddle                                                   000532 GR
+  0 _get_bounce_off_dir_y                                          00097B GR
+  0 _hits_paddle                                                   000864 GR
+  0 _hits_walls                                                    0005E9 GR
+  1 _hud                                                           000022 GR
+  1 _i                                                             000014 GR
+  0 _increment_score                                               000C8F GR
+  0 _init_game                                                     000CA0 GR
+  0 _init_paddle                                                   000622 GR
     _initrand                                                      ****** GX
-  0 _is_round_over                                                 000A2E GR
-  1 _itr                                                           000014 GR
+  0 _is_round_over                                                 000D9A GR
+  1 _j                                                             000015 GR
     _joypad                                                        ****** GX
-  0 _main                                                          000ACB GR
-  0 _move_ball                                                     00047E GR
-  0 _move_paddle                                                   000682 GR
-  1 _paddlehitscnt                                                 00001C GR
+  0 _main                                                          000F29 GR
+  0 _move_ball                                                     000535 GR
+  0 _move_paddle                                                   00074E GR
+  1 _numtiles                                                      00003E GR
+  1 _paddlehitscnt                                                 00001D GR
   1 _padheight                                                     000002 GR
   1 _padinity                                                      000007 GR
   1 _padsectors                                                    000004 GR
   1 _padspeed                                                      000003 GR
   1 _pdlcpu                                                        00000B GR
   1 _pdlpl1                                                        000008 GR
-  1 _pl1score                                                      000017 GR
-  0 _pongbkgtiles                                                  000019 GR
-  0 _ponggamemap                                                   000089 GR
-  0 _pongspritetiles                                               0001F1 GR
-  0 _prep_next_round                                               0008B9 GR
-    _rand                                                          ****** GX
-  1 _randindx                                                      000015 GR
-  1 _randindy                                                      000016 GR
-  1 _roundcnt                                                      00001F GR
-  1 _roundlimit                                                    00001E GR
-  0 _scroll_paddle_tiles                                           000645 GR
-    _set_bkg_data                                                  ****** GX
-    _set_bkg_tiles                                                 ****** GX
-  0 _set_pad_sectors                                               000000 GR
+  1 _pl1score                                                      000018 GR
+  0 _pongbkgtiles                                                  000031 GR
+  0 _pongfonttiles                                                 000259 GR
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (GameBoy Z80-like CPU), page 2.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
+  0 _ponggamemap                                                   0000A1 GR
+  0 _pongspritetiles                                               000209 GR
+  0 _prep_next_round                                               000D40 GR
+  0 _presst                                                        0004F9 GR
+    _rand                                                          ****** GX
+  1 _randindx                                                      000016 GR
+  1 _randindy                                                      000017 GR
+  1 _roundcnt                                                      000020 GR
+  1 _rounddispl                                                    000035 GR
+  1 _rounddisploffset                                              000021 GR
+  1 _roundlimit                                                    00001F GR
+  0 _scroll_paddle_tiles                                           000827 GR
+    _set_bkg_data                                                  ****** GX
+    _set_bkg_tiles                                                 ****** GX
+  0 _set_pad_sectors                                               000735 GR
+  0 _set_playfield_bkg                                             000000 GR
     _set_sprite_data                                               ****** GX
+    _set_win_tiles                                                 ****** GX
     _shadow_OAM                                                    ****** GX
-  0 _speedchframes                                                 00024E GR
-  1 _speedind                                                      00001D GR
-  0 _start_game                                                    000AAE GR
-  0 _startballposxy                                                000241 GR
-  0 _stspeedpoolx                                                  000245 GR
-  0 _stspeedpooly                                                  000247 GR
+  0 _speedchframes                                                 0004F6 GR
+  1 _speedind                                                      00001E GR
+  0 _start_game                                                    000F06 GR
+  0 _startballposxy                                                0004E9 GR
+  0 _stspeedpoolx                                                  0004ED GR
+  0 _stspeedpooly                                                  0004EF GR
   1 _tileind                                                       000012 GR
+  0 _trim_blank_num_tiles                                          000B4C GR
+  0 _upd_hud                                                       000C73 GR
+  0 _upd_number_tiles_arr                                          000AE4 GR
+  0 _upd_round_tiles                                               000BA0 GR
+  0 _upd_score_tiles                                               000BC2 GR
     _wait_vbl_done                                                 ****** GX
-
 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (GameBoy Z80-like CPU), page 3.
 Hexadecimal [24-Bits]
 
 Area Table
 
-   0 _CODE                                      size    AE3   flags    0
-   1 _DATA                                      size     20   flags    0
+   0 _CODE                                      size    F41   flags    0
+   1 _DATA                                      size     41   flags    0
    2 _DABS                                      size      0   flags    8
    3 _HOME                                      size      0   flags    0
-   4 _GSINIT                                    size      0   flags    0
+   4 _GSINIT                                    size     8C   flags    0
    5 _GSFINAL                                   size      0   flags    0
    6 _CABS                                      size      0   flags    8
 

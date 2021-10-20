@@ -5,6 +5,7 @@
 #include "pongspritetiles.c"
 #include "paddle.c"
 #include "ball.c"
+#include "pongfonttiles.c"
 
 
 
@@ -20,9 +21,9 @@ Paddle pdlcpu;
 Ball ball;
 UINT8 tileind;
 UINT8 difficulty; // 0 - easy, 1 - normal, 2 - hard
-UINT8 itr, randindx, randindy; // used in loops
+UINT8 i, j, randindx, randindy; // used in loops
 UINT8 pl1score, cpuscore;
-const UINT8 difficulty_px[3] = {139, 126, 84};
+const UINT8 difficulty_px[3] = {130, 110, 84};
 const INT8 stspeedpoolx[2] = {-4, 4};
 const INT8 stspeedpooly[5] = {-4, -2, 0, 2, 4};
 const UINT8 bkgborderup = 32;
@@ -31,63 +32,68 @@ UBYTE exitgameflg;
 UBYTE autospeedflg;  // Default: on
 INT8 chspeedflgdir; // For autospeed mode; holds current ball x direction
 UINT8 paddlehitscnt;
-const UINT8 speedchframes[3] = {6, 12, 36}; // Number of paddles hit before speed increase in auto mode
+const UINT8 speedchframes[3] = {6, 12, 42}; // Number of paddles hit before speed increase in auto mode
 UINT8 speedind;
 UINT8 roundlimit;
 UINT8 roundcnt;
+UINT8 rounddisploffset;
+unsigned char hud[19] = {0x1C, 0x18, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x28, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x1C, 0x21};
+unsigned char rounddispl[9] = {0x1E, 0x1B, 0x21, 0x1A, 0x10, 0x00, 0x00, 0x00, 0x00};
+unsigned char numtiles[3]; // Tiles for 3 digit numbers for reuse
+const unsigned char presst[11] = {0x1C, 0x1E, 0x11, 0x1F, 0x1F, 0x00, 0x1F, 0x20, 0x0D, 0x1E, 0x20};
 
 
+void set_playfield_bkg();
 void default_settings();
-void set_pad_sectors();
+void center_ball();
 void move_ball(Paddle * ppl1, Paddle * pcpu);
+UBYTE hits_walls(UINT8 nexty, UINT8 objheight);
 void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy);
-void prep_next_round();
-void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp);
+void set_pad_sectors();
 void move_paddle(Paddle * pdl, INT8 pdlsp);
+void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp);
+void action_cpu();
+UBYTE hits_paddle(UINT8 nextx, UINT8 nexty, Paddle * pdl);
+INT8 get_bounce_off_dir_y(Paddle * pad);
 void auto_speed_adj();
+void upd_number_tiles_arr(UINT8 num);
+void trim_blank_num_tiles();
+void upd_round_tiles();
+void upd_score_tiles();
+void display_round_num();
+void erase_round_num();
+void upd_hud();
+void increment_score();
 void init_game();
+void prep_next_round();
+UBYTE is_round_over();
 void begin_round();
 void start_game();
-UBYTE hits_walls(UINT8 nexty, UINT8 objheight);
-UBYTE hits_paddle(UINT8 nextx, UINT8 nexty, Paddle * pdl);
-UBYTE is_round_over();
-INT8 get_bounce_off_dir_y(Paddle * pad);
 
 
 
-void set_pad_sectors() {
-    // Dividing the paddle height into 4 equal sectors
-    // and setting the borders between them
-    padsectors[0] = padheight * 2; // 25%
-    padsectors[1] = padheight * 4; // 50%
-    padsectors[2] = padheight * 6; // 75%
+void set_playfield_bkg() {
+    set_bkg_data(0, 41, pongfonttiles);
+    set_bkg_data(41, 7, pongbkgtiles);
+    set_bkg_tiles(0, 0, 20, 18, ponggamemap);
 }
 
-UBYTE hits_walls(UINT8 nexty, UINT8 objheight) {
-    return nexty < bkgborderup || nexty + objheight > bkgborderdown;
+
+void default_settings() {
+    // Most balanced starting settings imho
+    autospeedflg = 1;
+    roundlimit = 10;
+    difficulty = 1;
+    padheight = 3;
+    padspeed = 3;
 }
 
-UBYTE hits_paddle(UINT8 nextx, UINT8 nexty, Paddle * pdl) {
-    return (nextx < pdl->x + 8 && pdl->x < nextx + 8) &&
-    (nexty < pdl->y + (padheight * 8) && pdl->y < nexty + 8);
+
+void center_ball() {
+    ball.x = ball.y = startballposxy;
+    move_sprite(0, ball.x, ball.y);
 }
 
-INT8 get_bounce_off_dir_y(Paddle * pad) {
-    // Recalculate vertical direction after collision with paddle
-    UINT8 ballcentery = ball.y + 4;
-    if(ballcentery < pad->y + padsectors[0]) { // < 25%
-        return -4;
-    } else if(ballcentery < pad->y + padsectors[1]) { // < 50%
-        return -2;
-    } else if(ballcentery == pad->y + padsectors[1]) { // == 50%
-        return 0;
-    } else if(ballcentery > pad->y + padsectors[2]) { // > 75%
-        return 4;
-    } else if(ballcentery > pad->y + padsectors[1]) { // > 50%
-        return 2;
-    }
-    return ball.speedy; // Just getting rid of a compiler warning
-}
 
 void move_ball(Paddle * ppl1, Paddle * pcpu) {
     UINT8 nextballposx = ball.x + ball.speedx;
@@ -107,6 +113,12 @@ void move_ball(Paddle * ppl1, Paddle * pcpu) {
     scroll_sprite(0, ball.speedx, ball.speedy);
 }
 
+
+UBYTE hits_walls(UINT8 nexty, UINT8 objheight) {
+    return nexty < bkgborderup || nexty + objheight > bkgborderdown;
+}
+
+
 void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy) {
 
     //Initialize paddle with first tile number and x/y coordinates
@@ -123,12 +135,12 @@ void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy) {
     move_sprite(firsttilenum, posx, posy);
 
     tileind = firsttilenum + 1;
-    itr = 1;
+    i = 1;
     while(tileind != firsttilenum + padheight - 1) { // Config tiles between the first and the last
         set_sprite_tile(tileind, 3);
-        move_sprite(tileind, posx, posy + itr * 8);
+        move_sprite(tileind, posx, posy + i * 8);
         tileind++;
-        itr++;
+        i++;
     }
 
     set_sprite_tile(tileind, 2);
@@ -137,11 +149,15 @@ void init_paddle(Paddle * pdl, UINT8 firsttilenum,UINT8 posx, UINT8 posy) {
     
 }
 
-void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp) {
-        for(itr = 0; itr != padheight; itr++) {
-            scroll_sprite(pdl->firsttile + itr, 0, pdlsp);
-        }
+
+void set_pad_sectors() {
+    // Dividing the paddle height into 4 equal sectors
+    // and setting the borders between them
+    padsectors[0] = padheight * 2; // 25%
+    padsectors[1] = padheight * 4; // 50%
+    padsectors[2] = padheight * 6; // 75%
 }
+
 
 void move_paddle(Paddle * pdl, INT8 pdlspd) {
     UINT8 nextpdly = pdl->y + pdlspd;
@@ -155,6 +171,38 @@ void move_paddle(Paddle * pdl, INT8 pdlspd) {
         pdl->y += adjspd;
     }
 }
+
+
+void scroll_paddle_tiles(Paddle * pdl, INT8 pdlsp) {
+        for(i = 0; i != padheight; i++) {
+            scroll_sprite(pdl->firsttile + i, 0, pdlsp);
+        }
+}
+
+
+UBYTE hits_paddle(UINT8 nextx, UINT8 nexty, Paddle * pdl) {
+    return (nextx < pdl->x + 8 && pdl->x < nextx + 8) &&
+    (nexty < pdl->y + (padheight * 8) && pdl->y < nexty + 8);
+}
+
+
+INT8 get_bounce_off_dir_y(Paddle * pad) {
+    // Recalculate vertical direction after collision with paddle
+    UINT8 ballcentery = ball.y + 4;
+    if(ballcentery < pad->y + padsectors[0]) { // < 25%
+        return -4;
+    } else if(ballcentery < pad->y + padsectors[1]) { // < 50%
+        return -2;
+    } else if(ballcentery == pad->y + padsectors[1]) { // == 50%
+        return 0;
+    } else if(ballcentery > pad->y + padsectors[2]) { // > 75%
+        return 4;
+    } else if(ballcentery > pad->y + padsectors[1]) { // > 50%
+        return 2;
+    }
+    return ball.speedy; // Just getting rid of a compiler warning
+}
+
 
 void action_cpu() {
     if(ball.x > difficulty_px[difficulty]) { // Determine when the cpu will react to the ball's position
@@ -177,26 +225,98 @@ void auto_speed_adj() {
 }
 
 
+void upd_number_tiles_arr(UINT8 num) { // Updates numtiles array for displaying purposes
+    numtiles[0] = num / 100 == 0 ? 0 : (num / 100) + 3; // blank if num < 100
+    numtiles[1] = numtiles[0] == 0 && num / 10 % 10 == 0 ? 0 : (num / 10 % 10) + 3; // blank if num < 10
+    numtiles[2] = num % 10 + 3;
+}
+
+
+void trim_blank_num_tiles() { // Shifts values so that the blanks go to the back of the array
+    if(numtiles[0] == 0) {
+        i = 1;
+        while(numtiles[i] == 0) {
+            i++;
+        }
+        for(j = 0; i < 3; i++, j++) {
+            numtiles[j] = numtiles[i];
+            numtiles[i] = 0;
+        }
+    }
+}
+
+
+void upd_round_tiles() {
+    upd_number_tiles_arr(roundcnt);
+    trim_blank_num_tiles();
+    rounddispl[6] = numtiles[0];
+    rounddispl[7] = numtiles[1];
+    rounddispl[8] = numtiles[2];
+}
+
+
+void upd_score_tiles() {
+    upd_number_tiles_arr(pl1score);
+    hud[6] = numtiles[0];
+    hud[7] = numtiles[1];
+    hud[8] = numtiles[2];
+
+    upd_number_tiles_arr(cpuscore);
+    trim_blank_num_tiles();
+    hud[10] = numtiles[0];
+    hud[11] = numtiles[1];
+    hud[12] = numtiles[2];
+}
+
+
+void display_round_num() {
+    rounddisploffset = roundcnt < 10 ? 0 : 1;
+    set_bkg_tiles(7 - rounddisploffset, 5, 9, 1, rounddispl);
+    set_bkg_tiles(5, 12, 11, 1, presst);
+}
+
+
+void erase_round_num() {
+    fill_bkg_rect(7 - rounddisploffset, 5, 9, 1, 0x00);
+    fill_bkg_rect(5, 12, 11, 1, 0x00);
+}
+
+
+void upd_hud() {
+    set_win_tiles(0, 0, 19, 1, hud);
+    move_win(12, 134);
+}
+
+
+void increment_score() {
+    if(ball.speedx < 0) { // Check the direction of the ball
+        cpuscore++;
+    } else {
+        pl1score++;
+    }
+}
+
+
 void init_game() {
-    set_bkg_data(0, 7, pongbkgtiles);
-    set_bkg_tiles(0, 0, 20, 18, ponggamemap);
+    set_playfield_bkg();
+    upd_hud();
 
     set_sprite_data(0, 5, pongspritetiles);
-    set_sprite_tile(0, 4);
-    ball.x = ball.y = startballposxy;
-    move_sprite(0, ball.x, ball.y); // Move ball to the middle of the playing field
+    set_sprite_tile(0, 4);  // Ball sprite tile
+    center_ball();
 
     // Calculating the initial paddle y position based on the given paddle height
     // using screen height, paddle height in px and adding the y axis offset
     padinity = 16 + (144 - (padheight * 8)) / 2;
-    init_paddle(&pdlpl1, 2, 16, padinity);
+    init_paddle(&pdlpl1, 1, 16, padinity);
     init_paddle(&pdlcpu, pdlpl1.firsttile + padheight, 152, padinity);
     set_pad_sectors();
 
-    move_sprite(1, 24, 80);
     pl1score = cpuscore = 0;
     roundcnt = 1;
     framecnt  = 0;
+    upd_score_tiles();
+    upd_round_tiles();
     if(autospeedflg) {
         speedind = 0;
         paddlehitscnt = 0;
@@ -204,17 +324,18 @@ void init_game() {
     }
 }
 
+
 void prep_next_round() {
-    // Recenter ball
-    ball.x = ball.y = startballposxy;
-    move_sprite(0, ball.x, ball.y);
 
     // Recenter paddles
     scroll_paddle_tiles(&pdlpl1, padinity - pdlpl1.y);
     scroll_paddle_tiles(&pdlcpu, padinity - pdlcpu.y);
     pdlpl1.y = pdlcpu.y = padinity;
     roundcnt++;
-    framecnt  = 0;
+    upd_round_tiles();
+    framecnt = 0;
+    
+    center_ball();
 
     // Resetting the ball speed when set to auto
     if(autospeedflg) {
@@ -224,11 +345,19 @@ void prep_next_round() {
     }
 }
 
+
+UBYTE is_round_over() {
+    return ball.x + 8 < pdlpl1.x - 8 || ball.x > pdlcpu.x + 16;
+}
+
+
 void begin_round() {
 
+    display_round_num();
     while(1) {  // Start round or return to titlescreen
         initrand(DIV_REG);
         if(joypad() & J_START) {
+            erase_round_num();
             break;
         } else if(joypad() & J_SELECT) {
                 exitgameflg = 1;
@@ -265,35 +394,21 @@ void begin_round() {
 
         action_cpu();
         if(is_round_over()) {
-            if(ball.x < startballposxy) { // Compare to the middle of the field x
-                pl1score++;
-            } else {
-                cpuscore++;
-            }
+            increment_score();
+            upd_score_tiles();
+            upd_hud();
             break;
         }
         wait_vbl_done();
     }
 }
 
-UBYTE is_round_over() {
-    return ball.x + 8 < pdlpl1.x - 8 || ball.x > pdlcpu.x + 16;
-}
-
-
-void default_settings() {
-    // Most balanced starting settings imho
-    autospeedflg = 1;
-    roundlimit = 25;
-    difficulty = 1;
-    padheight = 3;
-    padspeed = 3;
-}
 
 void start_game() {
     
     exitgameflg = 0;
     init_game();
+    SHOW_WIN;
     while(1) {
         begin_round();
         if(exitgameflg || roundcnt == roundlimit) {
@@ -302,6 +417,7 @@ void start_game() {
         prep_next_round();
     }
 }
+
 
 void main() {
 
