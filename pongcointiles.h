@@ -1,6 +1,6 @@
 /*
 
- PONGBKGTILES.H
+ PONGCOINTILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 7
+  Tiles                : 0 to 4
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define pongbkgtilesBank 0
+#define pongcointilesBank 0
 /* Start of tile array. */
-extern unsigned char pongbkgtiles[];
+extern unsigned char pongcointiles[];
 
-/* End of PONGBKGTILES.H */
+/* End of PONGCOINTILES.H */
