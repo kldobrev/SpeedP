@@ -1,14 +1,14 @@
 #include <gb/gb.h>
 #include <rand.h>
-#include "pongbkgtiles.c"
-#include "ponggameMap.c"
-#include "pongspritetiles.c"
+#include "speedpbkgtiles.c"
+#include "speedpgameMap.c"
+#include "speedpspritetiles.c"
 #include "paddle.c"
 #include "ball.c"
-#include "pongfonttiles.c"
-#include "pongtitlescreenmap.c"
-#include "pongcointiles.c"
-#include "pongoptionsscreen.c"
+#include "speedpfonttiles.c"
+#include "speedptitlescreenmap.c"
+#include "speedpcointiles.c"
+#include "speedpoptionsscreen.c"
 
 
 
@@ -25,7 +25,7 @@ Paddle pdlcpu;
 Ball ball;
 UINT8 tileind;
 UINT8 difficulty; // 0 - easy, 1 - normal, 2 - hard
-UINT8 i, j, randindx, randindy; // used in loops
+UINT8 i, j, k, randindx, randindy; // used in loops
 UINT8 pl1score, cpuscore;
 const UINT8 difficulty_px[3] = {130, 110, 84};
 const INT8 stspeedpoolx[2] = {-4, 4};
@@ -60,6 +60,12 @@ const unsigned char * cpu_options[3] = {easy_option, norm_option, hard_option};
 const unsigned char * pad_sp_options[4] = {slug_option, slow_option, norm_option, fast_option};
 const unsigned char * ball_sp_options[5] = {auto_option, slug_option, slow_option, norm_option, fast_option};
 UINT8 ball_sp_opt_ind;
+const unsigned char intro_created[7] = {0x0F, 0x1E, 0x11, 0x0D, 0x20, 0x11, 0x10};
+const unsigned char intro_by[2] = {0x0E, 0x25};
+const UINT8 intro_name_sprites[16] = {23, 27, 26, 31, 32, 13, 26, 32, 21, 26, 16, 27, 14, 30, 17, 34};
+const unsigned char intro_year[4] = {0x05, 0x03, 0x05, 0x04};
+
+
 
 
 void set_game_font();
@@ -104,16 +110,19 @@ void change_pad_height(INT8 units);
 void change_pad_speed(INT8 units);
 void change_ball_speed(INT8 units);
 void reset_to_default();
+void fade_to_black();
+void fade_from_black();
+void clear_sprite_tiles();
 
 
 void set_game_font() {
-    set_bkg_data(0, 41, pongfonttiles);
+    set_bkg_data(0, 41, speedpfonttiles);
 }
 
 
 void set_playfield_bkg() {
-    set_bkg_data(41, 8, pongbkgtiles);
-    set_bkg_tiles(0, 0, 20, 18, ponggamemap);
+    set_bkg_data(41, 6, speedpbkgtiles);
+    set_bkg_tiles(0, 0, 20, 18, speedpgamemap);
 }
 
 
@@ -320,24 +329,12 @@ void display_round_num() {
     rounddisploffset = roundcnt < 10 ? 0 : 1;
     set_bkg_tiles(7 - rounddisploffset, 5, 9, 1, rounddispl);
     set_bkg_tiles(5, 12, 11, 1, presst);
-    set_bkg_tile_xy(9, 8, 0x2C);
-    set_bkg_tile_xy(10, 8, 0x2B);
-    set_bkg_tile_xy(9, 9, 0x2D);
-    set_bkg_tile_xy(10, 9, 0x2E);
 }
 
 
 void erase_round_num() {
     fill_bkg_rect(7 - rounddisploffset, 5, 9, 1, blanktile);
     fill_bkg_rect(5, 12, 11, 1, blanktile);
-    set_bkg_tile_xy(9, 5, 0x2F);
-    set_bkg_tile_xy(10, 5, 0x30);
-    set_bkg_tile_xy(9, 8, 0x2F);
-    set_bkg_tile_xy(10, 8, 0x30);
-    set_bkg_tile_xy(9, 9, 0x2F);
-    set_bkg_tile_xy(10, 9, 0x30);
-    set_bkg_tile_xy(9, 12, 0x2F);
-    set_bkg_tile_xy(10, 12, 0x30);
 }
 
 
@@ -358,7 +355,7 @@ void increment_score() {
 
 void init_game() {
     set_playfield_bkg();
-    set_sprite_data(0, 5, pongspritetiles);
+    set_sprite_data(0, 5, speedpspritetiles);
     set_sprite_tile(0, 4);  // Ball sprite tile
     center_ball();
 
@@ -471,6 +468,7 @@ void start_game() {
     exitgameflg = 0;
     init_game();
     SHOW_WIN;
+    fade_from_black();
     while(1) {
         begin_round();
         if(exitgameflg || roundcnt == roundlimit) {
@@ -478,15 +476,46 @@ void start_game() {
         }
         prep_next_round();
     }
+    fade_to_black();
     HIDE_WIN; // Remove HUD before going back to the main menu
-    for(i = 0; i < 40; i++) { // Reset sprite memory
-        set_sprite_tile(i, blanktile);
-    }
+    clear_sprite_tiles();
 }
 
 
 void intro_screen() {
-    // TBD
+    fill_bkg_rect(0, 0, 20, 18, blanktile);
+    set_bkg_tiles(6, 3, 7, 1, intro_created);
+    set_bkg_tiles(9, 5, 2, 1, intro_by);
+    set_sprite_data(0, 36, speedpfonttiles);
+    move_sprite(0, 168, 80);
+
+    for(i = 0; i < 16; i++) {
+        set_sprite_tile(i, intro_name_sprites[i]);
+        set_sprite_prop(i, 0x20);
+        if(i < 10) {
+            move_sprite(i, 168, 80);
+            j = i + 5;
+        } else {
+            move_sprite(i, 168, 96);
+            j = i - 3;
+        }
+
+        while(j < 20) {
+            scroll_sprite(i, -8, 0);
+            wait_vbl_done();
+            j++;
+        }
+    }
+    for(k = 0; k < 16; k++) {
+        set_sprite_prop(k, 0x00);
+        custom_delay(4);
+    }
+
+    custom_delay(20);
+    set_bkg_tiles(8, 14, 4, 1, intro_year);
+    custom_delay(60);
+    fade_to_black();
+    clear_sprite_tiles();
 }
 
 
@@ -517,10 +546,11 @@ void move_coin_cursor(INT8 direction, UINT8 fstmenuind, UINT8 lastmenuind) {
 
 
 void main_menu() {
-    set_bkg_tiles(0, 0, 20, 18, pongtitlescreenmap);
-    set_sprite_data(0, 5, pongcointiles);
+    set_bkg_tiles(0, 0, 20, 18, speedptitlescreenmap);
+    set_sprite_data(0, 5, speedpcointiles);
     move_sprite(0, menuentriesx[0], menuentriesy[0]);
     crntmenuentry = 0;
+    fade_from_black();
 
     while(1) {
         incr_frame_counter(coinspinframe);
@@ -534,7 +564,7 @@ void main_menu() {
                 break;
         }
         if(joypad() & J_START) {
-            custom_delay(6);
+            fade_to_black();
             break; // End function execution and check selected entry
         }
         wait_vbl_done();
@@ -543,10 +573,11 @@ void main_menu() {
 
 
 void options_menu() {
-    set_bkg_tiles(0, 0, 20, 18, pongoptionsscreen);
+    set_bkg_tiles(0, 0, 20, 18, speedpoptionsscreen);
     display_all_opts_values();
     crntmenuentry = 2;
     move_sprite(0, menuentriesx[crntmenuentry], menuentriesy[crntmenuentry]);
+    fade_from_black();
 
     while(1) {
         incr_frame_counter(coinspinframe);
@@ -586,6 +617,7 @@ void options_menu() {
         }
         wait_vbl_done();
     }
+    fade_to_black();
 }
 
 
@@ -679,6 +711,53 @@ void reset_to_default() {
     default_settings();
     display_all_opts_values();
     custom_delay(9);
+}
+
+
+void fade_to_black() {
+    custom_delay(6);
+    for(k = 0; k < 3; k++) {
+        switch(k) {
+            case 0:
+                BGP_REG = 0xF9;
+                break;
+            case 1:
+                BGP_REG = 0xFE;
+                break;
+            case 2:
+                HIDE_SPRITES;
+                BGP_REG = 0xFF;
+                break;
+        }
+        custom_delay(6);
+    }
+}
+
+
+void fade_from_black() {
+    custom_delay(6);
+    for(k = 0; k < 3; k++) {
+        switch(k) {
+            case 0:
+                SHOW_SPRITES;
+                BGP_REG = 0xFE;
+                break;
+            case 1:
+                BGP_REG = 0xF9;
+                break;
+            case 2:
+                BGP_REG = 0xE4;
+                break;
+        }
+        custom_delay(6);
+    }
+}
+
+
+void clear_sprite_tiles() { // Reset sprite memory
+    for(i = 0; i < 40; i++) {
+            set_sprite_tile(i, blanktile);
+        }
 }
 
 

@@ -1,6 +1,6 @@
 /*
 
- PONGOPTIONSSCREEN.C
+ SPEEDPOPTIONSSCREEN.C
 
  Map Source File.
 
@@ -8,7 +8,7 @@
    Section       : 
    Bank          : 0
    Map size      : 20 x 18
-   Tile set      : C:\Game_Boy_Dev_Tools\gbtd22\Tiles\PongFont.gbr
+   Tile set      : C:\Game_Boy_Dev_Tools\gbtd22\Tiles\SpeedPFont.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
    Tile offset   : 0
@@ -18,11 +18,11 @@
 
 */
 
-#define pongoptionsscreenWidth 20
-#define pongoptionsscreenHeight 18
-#define pongoptionsscreenBank 0
+#define speedpoptionsscreenWidth 20
+#define speedpoptionsscreenHeight 18
+#define speedpoptionsscreenBank 0
 
-const unsigned char pongoptionsscreen[] =
+unsigned char speedpoptionsscreen[] =
 {
   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -62,4 +62,4 @@ const unsigned char pongoptionsscreen[] =
   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
-/* End of PONGOPTIONSSCREEN.C */
+/* End of SPEEDPOPTIONSSCREEN.C */

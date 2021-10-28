@@ -1,6 +1,6 @@
 /*
 
- PONGCOINTILES.H
+ SPEEDPSPRITETILES.H
 
  Include File.
 
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define pongcointilesBank 0
+#define speedpspritetilesbank 0
 /* Start of tile array. */
-extern unsigned char pongcointiles[];
+extern const unsigned char speedpspritetiles[];
 
-/* End of PONGCOINTILES.H */
+/* End of SPEEDPSPRITETILES.H */

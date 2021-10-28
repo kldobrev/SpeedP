@@ -1,6 +1,6 @@
 /*
 
- PONGGAMEMAP.H
+ SPEEDPGAMEMAP.H
 
  Map Include File.
 
@@ -8,7 +8,7 @@
    Section       : 
    Bank          : 0
    Map size      : 20 x 18
-   Tile set      : C:\Game_Boy_Dev_Tools\gbtd22\Tiles\PongBkgTiles.gbr
+   Tile set      : C:\Game_Boy_Dev_Tools\gbtd22\Tiles\SpeedPBkgTiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
    Tile offset   : 40
@@ -18,10 +18,10 @@
 
 */
 
-#define ponggamemapWidth 20
-#define ponggamemapHeight 18
-#define ponggamemapBank 0
+#define speedpgamemapWidth 20
+#define speedpgamemapHeight 18
+#define speedpgamemapBank 0
 
-extern unsigned char ponggamemap[];
+extern unsigned char speedpgamemap[];
 
-/* End of PONGGAMEMAP.H */
+/* End of SPEEDPGAMEMAP.H */

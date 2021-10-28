@@ -1,6 +1,6 @@
 /*
 
- PONGSPRITETILES.H
+ SPEEDPFONTTILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 4
+  Tiles                : 0 to 40
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define pongspritetilesbank 0
+#define speedpfonttilesBank 0
 /* Start of tile array. */
-extern const unsigned char pongspritetiles[];
+extern unsigned char speedpfonttiles[];
 
-/* End of PONGSPRITETILES.H */
+/* End of SPEEDPFONTTILES.H */

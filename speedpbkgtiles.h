@@ -1,6 +1,6 @@
 /*
 
- PONGFONTTILES.H
+ SPEEDPBKGTILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 40
+  Tiles                : 0 to 7
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define pongfonttilesBank 0
+#define speedpbkgtilesBank 0
 /* Start of tile array. */
-extern unsigned char pongfonttiles[];
+extern unsigned char speedpbkgtiles[];
 
-/* End of PONGFONTTILES.H */
+/* End of SPEEDPBKGTILES.H */
