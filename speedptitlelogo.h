@@ -1,6 +1,6 @@
 /*
 
- SPEEDPFONTTILES.H
+ SPEEDPTITLELOGO.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 41
+  Tiles                : 0 to 50
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define speedpfonttilesBank 0
+#define speedptitlelogoBank 0
 /* Start of tile array. */
-extern unsigned char speedpfonttiles[];
+extern unsigned char speedptitlelogo[];
 
-/* End of SPEEDPFONTTILES.H */
+/* End of SPEEDPTITLELOGO.H */

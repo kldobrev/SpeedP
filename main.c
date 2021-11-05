@@ -9,6 +9,9 @@
 #include "speedptitlescreenmap.c"
 #include "speedpcointiles.c"
 #include "speedpoptionsscreen.c"
+#include "speedptitlelogo.c"
+#include "speedpcuptiles.c"
+#include "speedpcupmap.c"
 
 
 
@@ -25,7 +28,7 @@ Paddle pdlcpu;
 Ball ball;
 UINT8 tileind;
 UINT8 difficulty; // 0 - easy, 1 - normal, 2 - hard
-UINT8 i, j, k, randindx, randindy; // used in loops
+UINT8 i, j, k, randindx, randindy, fontind; // used in loops
 UINT8 pl1score, cpuscore;
 const UINT8 difficulty_px[3] = {130, 110, 84};
 const INT8 stspeedpoolx[2] = {-4, 4};
@@ -41,13 +44,13 @@ UINT8 speedind;
 UINT8 roundlimit, roundcnt, rounddisploffset;
 UINT8 cointile;
 INT8 cointileincr;
-const UINT8 coinspinframe = 5;
-unsigned char hud[19] = {0x1C, 0x18, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x28, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x1C, 0x21};
+const UINT8 coinspinframe = 5, plnamecursframe = 5;
+unsigned char hud[19] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x28, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x1C, 0x21};
 unsigned char rounddispl[9] = {0x1E, 0x1B, 0x21, 0x1A, 0x10, 0x00, 0x00, 0x00, 0x00};
 unsigned char numtiles[3]; // Tiles for 3 digit numbers for reuse
 const unsigned char presst[11] = {0x1C, 0x1E, 0x11, 0x1F, 0x1F, 0x00, 0x1F, 0x20, 0x0D, 0x1E, 0x20};
-const UINT8 menuentriesx[9] = {42, 42, 18, 18, 18, 18, 18, 18, 66};
-const UINT8 menuentriesy[9] = {112, 128, 24, 40, 56, 72, 88, 128, 144};
+const UINT8 menuentriesx[10] = {42, 42, 18, 18, 18, 18, 18, 18, 18, 66};
+const UINT8 menuentriesy[10] = {112, 128, 24, 40, 56, 72, 88, 104, 128, 144};
 UINT8 crntmenuentry; // Tracks currently selected option in the menu
 const unsigned char norm_option[4] = {0x1A, 0x1B, 0x1E, 0x19};
 const unsigned char easy_option[4] = {0x11, 0x0D, 0x1F, 0x25};
@@ -64,7 +67,13 @@ const unsigned char intro_created[7] = {0x0F, 0x1E, 0x11, 0x0D, 0x20, 0x11, 0x10
 const unsigned char intro_by[2] = {0x0E, 0x25};
 const UINT8 intro_name_sprites[16] = {23, 27, 26, 31, 32, 13, 26, 32, 21, 26, 16, 27, 14, 30, 17, 34};
 const unsigned char intro_year[4] = {0x05, 0x03, 0x05, 0x04};
-
+const unsigned char congrats[16] = {0x0F, 0x1B, 0x1A, 0x13, 0x1E, 0x0D, 0x20, 0x21, 0x18, 0x0D, 0x20, 0x15, 0x1B, 0x1A, 0x1F, 0x29};
+const unsigned char toobad[7] = {0x20, 0x1B, 0x1B, 0x00, 0x0E, 0x0D, 0x10};
+const unsigned char youwin[7] = {0x25, 0x1B, 0x21, 0x00, 0x23, 0x15, 0x1A};
+const unsigned char youlose[8] = {0x25, 0x1B, 0x21, 0x00, 0x18, 0x1B, 0x1F, 0x11};
+const unsigned char cpuname[3] = {0x0F, 0x1C, 0x21};
+unsigned char plname[3] = {0x1C, 0x18, 0x04};
+UINT8 plnameind, plnameflashval;
 
 
 
@@ -104,6 +113,9 @@ void main_menu();
 void options_menu();
 void change_property(INT8 units, UINT8 menuentry);
 void display_all_opts_values();
+void change_player_name();
+void change_letter_in_name(INT8 step, UINT8 limit);
+void move_to_next_letter(INT8 step, UINT8 limit);
 void change_cpu(INT8 units);
 void change_num_rounds(INT8 units);
 void change_pad_height(INT8 units);
@@ -113,15 +125,16 @@ void reset_to_default();
 void fade_to_black();
 void fade_from_black();
 void clear_sprite_tiles();
+void results_sequence();
 
 
 void set_game_font() {
-    set_bkg_data(0, 41, speedpfonttiles);
+    set_bkg_data(0, 42, speedpfonttiles);
 }
 
 
 void set_playfield_bkg() {
-    set_bkg_data(41, 6, speedpbkgtiles);
+    set_bkg_data(42, 6, speedpbkgtiles);
     set_bkg_tiles(0, 0, 20, 18, speedpgamemap);
 }
 
@@ -369,6 +382,9 @@ void init_game() {
     pl1score = cpuscore = 0;
     roundcnt = 1;
     framecnt  = 0;
+    for(k = 0; k < 3; k++) { // Display player name
+        hud[k] = plname[k];
+    }
     upd_score_tiles();
     upd_round_tiles();
     update_hud();
@@ -546,6 +562,7 @@ void move_coin_cursor(INT8 direction, UINT8 fstmenuind, UINT8 lastmenuind) {
 
 
 void main_menu() {
+    set_bkg_data(42, 51, speedptitlelogo);
     set_bkg_tiles(0, 0, 20, 18, speedptitlescreenmap);
     set_sprite_data(0, 5, speedpcointiles);
     move_sprite(0, menuentriesx[0], menuentriesy[0]);
@@ -585,10 +602,10 @@ void options_menu() {
 
         switch(joypad()) {
             case J_UP:
-                move_coin_cursor(-1, 2, 8);
+                move_coin_cursor(-1, 2, 9);
                 break;
             case J_DOWN:
-                move_coin_cursor(1, 2, 8);
+                move_coin_cursor(1, 2, 9);
                 break;
             case J_LEFT:
                 change_property(-1, crntmenuentry);
@@ -608,9 +625,13 @@ void options_menu() {
                 break;
         }
         if(joypad() & (J_START | J_A)) {
-            if(crntmenuentry == 7) {
+            if(crntmenuentry == 2) {
+                custom_delay(9);
+                change_player_name();
+            }
+            else if(crntmenuentry == 8) {
                 reset_to_default();
-            } else if(crntmenuentry == 8) {
+            } else if(crntmenuentry == 9) {
                 custom_delay(9);
                 break; // Back to main menu
             }
@@ -623,19 +644,19 @@ void options_menu() {
 
 void change_property(INT8 units, UINT8 menuentry) {
     switch(menuentry) {
-        case 2:
+        case 3:
             change_cpu(units);
             break;
-        case 3:
+        case 4:
             change_num_rounds(units);
             break;
-        case 4:
+        case 5:
             change_pad_height(units);
             break;
-        case 5:
+        case 6:
             change_pad_speed(units);
             break;
-        case 6:
+        case 7:
             change_ball_speed(units);
             break;
     }
@@ -644,22 +665,76 @@ void change_property(INT8 units, UINT8 menuentry) {
 
 
 void display_all_opts_values() {
-    set_bkg_tiles(15, 1, 4, 1, cpu_options[difficulty]);
+    set_bkg_tiles(15, 1, 3, 1, plname);
+    set_bkg_tiles(15, 3, 4, 1, cpu_options[difficulty]);
     upd_number_tiles_arr(roundlimit);
     ltrim_blank_num_tiles();
-    set_bkg_tiles(15, 3, 3, 1, numtiles);
+    set_bkg_tiles(15, 5, 3, 1, numtiles);
     upd_number_tiles_arr(padheight);
     ltrim_blank_num_tiles();
-    set_bkg_tiles(15, 5, 3, 1, numtiles);
-    set_bkg_tiles(15, 7, 4, 1, pad_sp_options[padspeed - 1]);
-    set_bkg_tiles(15, 9, 4, 1, ball_sp_options[ball_sp_opt_ind]);
+    set_bkg_tiles(15, 7, 3, 1, numtiles);
+    set_bkg_tiles(15, 9, 4, 1, pad_sp_options[padspeed - 1]);
+    set_bkg_tiles(15, 11, 4, 1, ball_sp_options[ball_sp_opt_ind]);
+}
+
+
+void change_player_name() {
+    HIDE_SPRITES;
+    plnameind = 0;
+    UINT8 coinframecntprev = framecnt; // Saving current frame count
+    framecnt = 0;
+    plnameflashval = 0x02;
+    fontind = plname[0];
+    while(1) {
+        incr_frame_counter(plnamecursframe);
+        if(framecnt == plnamecursframe) {
+            plnameflashval = plnameflashval == 0x02 ? plname[plnameind] : 0x02;
+            set_bkg_tile_xy(15 + plnameind, 1, plnameflashval);
+        }
+        switch(joypad()) {
+            case J_UP:
+                change_letter_in_name(-1, 3);
+                break;
+            case J_DOWN:
+                change_letter_in_name(1, 38);
+                break;
+            case J_LEFT:
+                move_to_next_letter(-1, 0);
+                break;
+            case J_RIGHT:
+                move_to_next_letter(1, 2);
+                break;
+        }
+        if(joypad() & (J_START | J_A)) {
+            break;
+        }
+        custom_delay(6);
+    }
+    custom_delay(9);
+    set_bkg_tiles(15, 1, 3, 1, plname);
+    framecnt = coinframecntprev;
+    SHOW_SPRITES;
+}
+
+
+void change_letter_in_name(INT8 step, UINT8 limit) {
+    fontind += fontind == limit ? 0 : step;
+    plname[plnameind] = fontind;
+    set_bkg_tile_xy(15 + plnameind, 1, plname[plnameind]);
+}
+
+
+void move_to_next_letter(INT8 step, UINT8 limit) {
+    set_bkg_tile_xy(15 + plnameind, 1, plname[plnameind]);
+    plnameind += plnameind == limit ? 0 : step;
+    fontind = plname[plnameind];
 }
 
 
 void change_cpu(INT8 units) {
     if(difficulty + units >= 0 && difficulty + units < 3) {
         difficulty += units;
-        set_bkg_tiles(15, 1, 4, 1, cpu_options[difficulty]);
+        set_bkg_tiles(15, 3, 4, 1, cpu_options[difficulty]);
     }
 }
 
@@ -669,7 +744,7 @@ void change_num_rounds(INT8 units) {
         roundlimit += units;
         upd_number_tiles_arr(roundlimit);
         ltrim_blank_num_tiles();
-        set_bkg_tiles(15, 3, 3, 1, numtiles);
+        set_bkg_tiles(15, 5, 3, 1, numtiles);
     }
 }
 
@@ -679,7 +754,7 @@ void change_pad_height(INT8 units) {
         padheight += units;
         upd_number_tiles_arr(padheight);
         ltrim_blank_num_tiles();
-        set_bkg_tiles(15, 5, 3, 1, numtiles);
+        set_bkg_tiles(15, 7, 3, 1, numtiles);
     }
 }
 
@@ -687,7 +762,7 @@ void change_pad_height(INT8 units) {
 void change_pad_speed(INT8 units) {
     if(padspeed + units > 0 && padspeed + units < 5) {
         padspeed += units;
-        set_bkg_tiles(15, 7, 4, 1, pad_sp_options[padspeed - 1]);
+        set_bkg_tiles(15, 9, 4, 1, pad_sp_options[padspeed - 1]);
     }
 }
 
@@ -697,11 +772,11 @@ void change_ball_speed(INT8 units) {
         ball_sp_opt_ind += units;
         if(ball_sp_opt_ind == 0) {
             autospeedflg = 1;
-            set_bkg_tiles(15, 9, 4, 1, ball_sp_options[0]);
+            set_bkg_tiles(15, 11, 4, 1, ball_sp_options[0]);
         } else {
             autospeedflg = 0;
             ballmvframe = 5 - ball_sp_opt_ind;
-            set_bkg_tiles(15, 9, 4, 1, ball_sp_options[ball_sp_opt_ind]);
+            set_bkg_tiles(15, 11, 4, 1, ball_sp_options[ball_sp_opt_ind]);
         }
     }
 }
@@ -735,7 +810,7 @@ void fade_to_black() {
 
 
 void fade_from_black() {
-    custom_delay(6);
+    custom_delay(5);
     for(k = 0; k < 3; k++) {
         switch(k) {
             case 0:
@@ -749,7 +824,7 @@ void fade_from_black() {
                 BGP_REG = 0xE4;
                 break;
         }
-        custom_delay(6);
+        custom_delay(5);
     }
 }
 
@@ -758,6 +833,29 @@ void clear_sprite_tiles() { // Reset sprite memory
     for(i = 0; i < 40; i++) {
             set_sprite_tile(i, blanktile);
         }
+}
+
+
+
+void results_sequence() {
+    fill_bkg_rect(0, 0 , 20, 18, blanktile);
+    set_game_font();
+    set_bkg_data(42, 48, speedpcuptiles);
+    set_bkg_tiles(7, 4, 7, 11, speedpcupmap);
+
+    if(pl1score > cpuscore) {
+        set_bkg_tiles(2, 2, 16, 1, congrats);
+        set_bkg_tiles(7, 16, 7, 1, youwin);
+        set_bkg_tiles(9, 13, 3, 1, plname);
+    } else {
+        set_bkg_tiles(7, 2, 7, 1, toobad);
+        set_bkg_tiles(6, 16, 8, 1, youlose);
+        set_bkg_tiles(9, 13, 3, 1, cpuname);
+    }
+
+    fade_from_black();
+    waitpad(J_START);
+    fade_to_black();
 }
 
 
@@ -778,6 +876,9 @@ void main() {
         switch(crntmenuentry) {
             case 0:
                 start_game();
+                if(!exitgameflg && (pl1score != cpuscore)) {
+                    results_sequence();
+                }
                 break;
             case 1:
                 options_menu();
