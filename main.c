@@ -52,21 +52,21 @@ const unsigned char presst[11] = {0x1C, 0x1E, 0x11, 0x1F, 0x1F, 0x00, 0x1F, 0x20
 const UINT8 menuentriesx[10] = {42, 42, 18, 18, 18, 18, 18, 18, 18, 66};
 const UINT8 menuentriesy[10] = {112, 128, 24, 40, 56, 72, 88, 104, 128, 144};
 UINT8 crntmenuentry; // Tracks currently selected option in the menu
-const unsigned char norm_option[4] = {0x1A, 0x1B, 0x1E, 0x19};
-const unsigned char easy_option[4] = {0x11, 0x0D, 0x1F, 0x25};
-const unsigned char hard_option[4] = {0x14, 0x0D, 0x1E, 0x10};
-const unsigned char auto_option[4] = {0x0D, 0x21, 0x20, 0x1B};
-const unsigned char slug_option[4] = {0x1F, 0x18, 0x21, 0x13};
-const unsigned char slow_option[4] = {0x1F, 0x18, 0x1B, 0x23};
-const unsigned char fast_option[4] = {0x12, 0x0D, 0x1F, 0x20};
-const unsigned char * cpu_options[3] = {easy_option, norm_option, hard_option};
-const unsigned char * pad_sp_options[4] = {slug_option, slow_option, norm_option, fast_option};
-const unsigned char * ball_sp_options[5] = {auto_option, slug_option, slow_option, norm_option, fast_option};
-UINT8 ball_sp_opt_ind;
-const unsigned char intro_created[7] = {0x0F, 0x1E, 0x11, 0x0D, 0x20, 0x11, 0x10};
-const unsigned char intro_by[2] = {0x0E, 0x25};
-const UINT8 intro_name_sprites[16] = {23, 27, 26, 31, 32, 13, 26, 32, 21, 26, 16, 27, 14, 30, 17, 34};
-const unsigned char intro_year[4] = {0x05, 0x03, 0x05, 0x04};
+const unsigned char normoption[4] = {0x1A, 0x1B, 0x1E, 0x19};
+const unsigned char easyoption[4] = {0x11, 0x0D, 0x1F, 0x25};
+const unsigned char hardoption[4] = {0x14, 0x0D, 0x1E, 0x10};
+const unsigned char autooption[4] = {0x0D, 0x21, 0x20, 0x1B};
+const unsigned char slugoption[4] = {0x1F, 0x18, 0x21, 0x13};
+const unsigned char slowoption[4] = {0x1F, 0x18, 0x1B, 0x23};
+const unsigned char fastoption[4] = {0x12, 0x0D, 0x1F, 0x20};
+const unsigned char * cpuoptions[3] = {easyoption, normoption, hardoption};
+const unsigned char * padspoptions[4] = {slugoption, slowoption, normoption, fastoption};
+const unsigned char * ballspoptions[5] = {autooption, slugoption, slowoption, normoption, fastoption};
+UINT8 ballspoptind;
+const unsigned char introcreated[7] = {0x0F, 0x1E, 0x11, 0x0D, 0x20, 0x11, 0x10};
+const unsigned char introby[2] = {0x0E, 0x25};
+const UINT8 intronamesprites[16] = {23, 27, 26, 31, 32, 13, 26, 32, 21, 26, 16, 27, 14, 30, 17, 34};
+const unsigned char introyear[4] = {0x05, 0x03, 0x05, 0x04};
 const unsigned char congrats[16] = {0x0F, 0x1B, 0x1A, 0x13, 0x1E, 0x0D, 0x20, 0x21, 0x18, 0x0D, 0x20, 0x15, 0x1B, 0x1A, 0x1F, 0x29};
 const unsigned char toobad[7] = {0x20, 0x1B, 0x1B, 0x00, 0x0E, 0x0D, 0x10};
 const unsigned char youwin[7] = {0x25, 0x1B, 0x21, 0x00, 0x23, 0x15, 0x1A};
@@ -126,6 +126,14 @@ void fade_to_black();
 void fade_from_black();
 void clear_sprite_tiles();
 void results_sequence();
+void pl_score_sound();
+void cpu_score_sound();
+void paddle_hit_sound();
+void wall_hit_sound();
+void serve_ball_sound();
+void move_menu_sound();
+void choose_menu_sound();
+void change_prop_sound();
 
 
 void set_game_font() {
@@ -142,7 +150,7 @@ void set_playfield_bkg() {
 void default_settings() {
     // Most balanced starting settings imho
     autospeedflg = 1;
-    ball_sp_opt_ind = 0;
+    ballspoptind = 0;
     roundlimit = 10;
     difficulty = 1;
     padheight = 3;
@@ -168,13 +176,16 @@ void move_ball(Paddle * ppl1, Paddle * pcpu) {
     UINT8 nextballposy = ball.y + ball.speedy;
     if(hits_walls(nextballposy, 8)) {
         ball.speedy *= -1;
+        wall_hit_sound();
     }
     if(hits_paddle(nextballposx, nextballposy, ppl1)) {
         ball.speedx *= -1;
         ball.speedy = get_bounce_off_dir_y(ppl1);
+        paddle_hit_sound();
     } else if(hits_paddle(nextballposx, nextballposy, pcpu)) {
         ball.speedx *= -1;
         ball.speedy = get_bounce_off_dir_y(pcpu);
+        paddle_hit_sound();
     }
     ball.x += ball.speedx;
     ball.y += ball.speedy;
@@ -360,8 +371,10 @@ void update_hud() {
 void increment_score() {
     if(ball.speedx < 0) { // Check the direction of the ball
         cpuscore++;
+        cpu_score_sound();
     } else {
         pl1score++;
+        pl_score_sound();
     }
 }
 
@@ -448,6 +461,7 @@ void begin_round() {
     ball.speedx = stspeedpoolx[randindx];
     ball.speedy = stspeedpooly[randindy];
     chspeedflgdir = ball.speedx;
+    serve_ball_sound();
 
     while(1) {
         if(autospeedflg) {
@@ -500,13 +514,13 @@ void start_game() {
 
 void intro_screen() {
     fill_bkg_rect(0, 0, 20, 18, blanktile);
-    set_bkg_tiles(6, 3, 7, 1, intro_created);
-    set_bkg_tiles(9, 5, 2, 1, intro_by);
+    set_bkg_tiles(6, 3, 7, 1, introcreated);
+    set_bkg_tiles(9, 5, 2, 1, introby);
     set_sprite_data(0, 36, speedpfonttiles);
     move_sprite(0, 168, 80);
 
     for(i = 0; i < 16; i++) {
-        set_sprite_tile(i, intro_name_sprites[i]);
+        set_sprite_tile(i, intronamesprites[i]);
         set_sprite_prop(i, 0x20);
         if(i < 10) {
             move_sprite(i, 168, 80);
@@ -528,7 +542,7 @@ void intro_screen() {
     }
 
     custom_delay(20);
-    set_bkg_tiles(8, 14, 4, 1, intro_year);
+    set_bkg_tiles(8, 14, 4, 1, introyear);
     custom_delay(60);
     fade_to_black();
     clear_sprite_tiles();
@@ -557,6 +571,7 @@ void move_coin_cursor(INT8 direction, UINT8 fstmenuind, UINT8 lastmenuind) {
         crntmenuentry += direction;
     }
     move_sprite(0, menuentriesx[crntmenuentry], menuentriesy[crntmenuentry]);
+    move_menu_sound();
     custom_delay(9);
 }
 
@@ -581,6 +596,7 @@ void main_menu() {
                 break;
         }
         if(joypad() & J_START) {
+            choose_menu_sound();
             fade_to_black();
             break; // End function execution and check selected entry
         }
@@ -614,12 +630,12 @@ void options_menu() {
                 change_property(1, crntmenuentry);
                 break;
             case J_A:
-                if(crntmenuentry == 3) {
+                if(crntmenuentry == 4) {
                     change_property(10, crntmenuentry);
                 }
                 break;
             case J_B:
-                if(crntmenuentry == 3) {
+                if(crntmenuentry == 4) {
                     change_property(-10, crntmenuentry);
                 }
                 break;
@@ -627,11 +643,14 @@ void options_menu() {
         if(joypad() & (J_START | J_A)) {
             if(crntmenuentry == 2) {
                 custom_delay(9);
+                choose_menu_sound();
                 change_player_name();
             }
             else if(crntmenuentry == 8) {
                 reset_to_default();
+                change_prop_sound();
             } else if(crntmenuentry == 9) {
+                choose_menu_sound();
                 custom_delay(9);
                 break; // Back to main menu
             }
@@ -660,21 +679,22 @@ void change_property(INT8 units, UINT8 menuentry) {
             change_ball_speed(units);
             break;
     }
+    change_prop_sound();
     custom_delay(6);
 }
 
 
 void display_all_opts_values() {
     set_bkg_tiles(15, 1, 3, 1, plname);
-    set_bkg_tiles(15, 3, 4, 1, cpu_options[difficulty]);
+    set_bkg_tiles(15, 3, 4, 1, cpuoptions[difficulty]);
     upd_number_tiles_arr(roundlimit);
     ltrim_blank_num_tiles();
     set_bkg_tiles(15, 5, 3, 1, numtiles);
     upd_number_tiles_arr(padheight);
     ltrim_blank_num_tiles();
     set_bkg_tiles(15, 7, 3, 1, numtiles);
-    set_bkg_tiles(15, 9, 4, 1, pad_sp_options[padspeed - 1]);
-    set_bkg_tiles(15, 11, 4, 1, ball_sp_options[ball_sp_opt_ind]);
+    set_bkg_tiles(15, 9, 4, 1, padspoptions[padspeed - 1]);
+    set_bkg_tiles(15, 11, 4, 1, ballspoptions[ballspoptind]);
 }
 
 
@@ -713,6 +733,7 @@ void change_player_name() {
     custom_delay(9);
     set_bkg_tiles(15, 1, 3, 1, plname);
     framecnt = coinframecntprev;
+    choose_menu_sound();
     SHOW_SPRITES;
 }
 
@@ -721,6 +742,7 @@ void change_letter_in_name(INT8 step, UINT8 limit) {
     fontind += fontind == limit ? 0 : step;
     plname[plnameind] = fontind;
     set_bkg_tile_xy(15 + plnameind, 1, plname[plnameind]);
+    change_prop_sound();
 }
 
 
@@ -728,13 +750,14 @@ void move_to_next_letter(INT8 step, UINT8 limit) {
     set_bkg_tile_xy(15 + plnameind, 1, plname[plnameind]);
     plnameind += plnameind == limit ? 0 : step;
     fontind = plname[plnameind];
+    move_menu_sound();
 }
 
 
 void change_cpu(INT8 units) {
     if(difficulty + units >= 0 && difficulty + units < 3) {
         difficulty += units;
-        set_bkg_tiles(15, 3, 4, 1, cpu_options[difficulty]);
+        set_bkg_tiles(15, 3, 4, 1, cpuoptions[difficulty]);
     }
 }
 
@@ -762,21 +785,21 @@ void change_pad_height(INT8 units) {
 void change_pad_speed(INT8 units) {
     if(padspeed + units > 0 && padspeed + units < 5) {
         padspeed += units;
-        set_bkg_tiles(15, 9, 4, 1, pad_sp_options[padspeed - 1]);
+        set_bkg_tiles(15, 9, 4, 1, padspoptions[padspeed - 1]);
     }
 }
 
 
 void change_ball_speed(INT8 units) {
-    if(ball_sp_opt_ind + units >= 0 && ball_sp_opt_ind + units < 5) {
-        ball_sp_opt_ind += units;
-        if(ball_sp_opt_ind == 0) {
+    if(ballspoptind + units >= 0 && ballspoptind + units < 5) {
+        ballspoptind += units;
+        if(ballspoptind == 0) {
             autospeedflg = 1;
-            set_bkg_tiles(15, 11, 4, 1, ball_sp_options[0]);
+            set_bkg_tiles(15, 11, 4, 1, ballspoptions[0]);
         } else {
             autospeedflg = 0;
-            ballmvframe = 5 - ball_sp_opt_ind;
-            set_bkg_tiles(15, 11, 4, 1, ball_sp_options[ball_sp_opt_ind]);
+            ballmvframe = 5 - ballspoptind;
+            set_bkg_tiles(15, 11, 4, 1, ballspoptions[ballspoptind]);
         }
     }
 }
@@ -859,10 +882,82 @@ void results_sequence() {
 }
 
 
+void pl_score_sound() {
+    NR10_REG = 0x26;
+    NR11_REG = 0x80;
+    NR12_REG = 0x67;
+    NR13_REG = 0xF4;
+    NR14_REG = 0x81;
+}
+
+
+void cpu_score_sound() {
+    NR10_REG = 0x1D;
+    NR11_REG = 0x80;
+    NR12_REG = 0x67;
+    NR13_REG = 0x40;
+    NR14_REG = 0x86;
+}
+
+
+void paddle_hit_sound() {
+    NR41_REG = 0x00;
+    NR42_REG = 0x72;
+    NR43_REG = 0x61;
+    NR44_REG = 0xC0;
+}
+
+
+void wall_hit_sound() {
+    NR10_REG = 0x08;
+    NR11_REG = 0x80;
+    NR12_REG = 0x26;
+    NR13_REG = 0x08;
+    NR14_REG = 0x87;
+}
+
+
+void serve_ball_sound() {
+    NR41_REG = 0x01;
+    NR42_REG = 0x94;
+    NR43_REG = 0x71;
+    NR44_REG = 0x80;
+}
+
+
+void move_menu_sound() {
+    NR21_REG = 0xC1;
+    NR22_REG = 0x83;
+    NR23_REG = 0xA4;
+    NR24_REG = 0x86;
+}
+
+
+void choose_menu_sound() {
+    NR10_REG = 0x26;
+    NR11_REG = 0x80;
+    NR12_REG = 0x62;
+    NR13_REG = 0x6F;
+    NR14_REG = 0x86;
+}
+
+
+void change_prop_sound() {
+    NR21_REG = 0xC1;
+    NR22_REG = 0x83;
+    NR23_REG = 0x3A;
+    NR24_REG = 0x87;
+}
+
+
 void main() {
     DISPLAY_ON;
     SHOW_BKG;
     SHOW_SPRITES;
+
+    NR52_REG = 0x80; // Sound on
+    NR51_REG = 0xFF; // All channels
+    NR50_REG = 0x77; // Max level, left and right
 
     set_game_font();
     intro_screen();
