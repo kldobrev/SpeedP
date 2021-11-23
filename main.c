@@ -12,6 +12,7 @@
 #include "speedptitlelogo.c"
 #include "speedpcuptiles.c"
 #include "speedpcupmap.c"
+#include "hUGEDriver.h"
 
 
 
@@ -75,7 +76,10 @@ const unsigned char cpuname[3] = {0x0F, 0x1C, 0x21};
 unsigned char plname[3] = {0x1C, 0x18, 0x04};
 UINT8 plnameind, plnameflashval;
 
-
+extern const hUGESong_t speedpwarmup;
+extern const hUGESong_t speedpyouwin;
+extern const hUGESong_t speedpyoulose;
+extern const hUGESong_t speedpgo;
 
 void set_game_font();
 void set_playfield_bkg();
@@ -134,6 +138,8 @@ void serve_ball_sound();
 void move_menu_sound();
 void choose_menu_sound();
 void change_prop_sound();
+void play_song(const hUGESong_t * song);
+void stop_song();
 
 
 void set_game_font() {
@@ -462,6 +468,9 @@ void begin_round() {
     ball.speedy = stspeedpooly[randindy];
     chspeedflgdir = ball.speedx;
     serve_ball_sound();
+    if(roundcnt == 1) { // Play song after first serve
+        play_song(&speedpgo);
+    }
 
     while(1) {
         if(autospeedflg) {
@@ -506,6 +515,7 @@ void start_game() {
         }
         prep_next_round();
     }
+    stop_song();
     fade_to_black();
     HIDE_WIN; // Remove HUD before going back to the main menu
     clear_sprite_tiles();
@@ -584,6 +594,8 @@ void main_menu() {
     crntmenuentry = 0;
     fade_from_black();
 
+    play_song(&speedpwarmup);
+
     while(1) {
         incr_frame_counter(coinspinframe);
         animate_coin_spin();
@@ -596,6 +608,7 @@ void main_menu() {
                 break;
         }
         if(joypad() & J_START) {
+            stop_song();
             choose_menu_sound();
             fade_to_black();
             break; // End function execution and check selected entry
@@ -870,14 +883,17 @@ void results_sequence() {
         set_bkg_tiles(2, 2, 16, 1, congrats);
         set_bkg_tiles(7, 16, 7, 1, youwin);
         set_bkg_tiles(9, 13, 3, 1, plname);
+        play_song(&speedpyouwin);
     } else {
         set_bkg_tiles(7, 2, 7, 1, toobad);
         set_bkg_tiles(6, 16, 8, 1, youlose);
         set_bkg_tiles(9, 13, 3, 1, cpuname);
+        play_song(&speedpyoulose);
     }
 
     fade_from_black();
     waitpad(J_START);
+    stop_song();
     fade_to_black();
 }
 
@@ -909,11 +925,10 @@ void paddle_hit_sound() {
 
 
 void wall_hit_sound() {
-    NR10_REG = 0x08;
-    NR11_REG = 0x80;
-    NR12_REG = 0x26;
-    NR13_REG = 0x08;
-    NR14_REG = 0x87;
+    NR41_REG = 0x1E;
+    NR42_REG = 0x82;
+    NR43_REG = 0x22;
+    NR44_REG = 0xC0;
 }
 
 
@@ -947,6 +962,23 @@ void change_prop_sound() {
     NR22_REG = 0x83;
     NR23_REG = 0x3A;
     NR24_REG = 0x87;
+}
+
+
+void play_song(const hUGESong_t * song) {
+    __critical {
+        hUGE_init(song);
+        add_VBL(hUGE_dosound);
+    }
+}
+
+
+void stop_song() {
+    hUGE_mute_channel(HT_CH1, HT_CH_MUTE);
+    hUGE_mute_channel(HT_CH2, HT_CH_MUTE);
+    hUGE_mute_channel(HT_CH3, HT_CH_MUTE);
+    hUGE_mute_channel(HT_CH4, HT_CH_MUTE);
+    remove_VBL(hUGE_dosound);
 }
 
 
