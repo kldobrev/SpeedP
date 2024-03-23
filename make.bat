@@ -1,1 +1,1 @@
-lcc -Iinclude -o speedp.gb main.c hUGEDriver.obj.o speedptitlesong.c speedpwinsong.c speedplosesong.c speedproundsong.c
+lcc include -o speedp.gb main.c hUGEDriver.obj.o speedptitlesong.c speedpwinsong.c speedplosesong.c speedproundsong.c

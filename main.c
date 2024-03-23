@@ -51,7 +51,7 @@ unsigned char rounddispl[9] = {0x1E, 0x1B, 0x21, 0x1A, 0x10, 0x00, 0x00, 0x00, 0
 unsigned char numtiles[3]; // Tiles for 3 digit numbers for reuse
 const unsigned char presst[11] = {0x1C, 0x1E, 0x11, 0x1F, 0x1F, 0x00, 0x1F, 0x20, 0x0D, 0x1E, 0x20};
 const UINT8 menuentriesx[10] = {42, 42, 18, 18, 18, 18, 18, 18, 18, 66};
-const UINT8 menuentriesy[10] = {112, 128, 24, 40, 56, 72, 88, 104, 128, 144};
+const UINT8 menuentriesy[10] = {104, 120, 24, 40, 56, 72, 88, 104, 128, 144};
 UINT8 crntmenuentry; // Tracks currently selected option in the menu
 const unsigned char normoption[4] = {0x1A, 0x1B, 0x1E, 0x19};
 const unsigned char easyoption[4] = {0x11, 0x0D, 0x1F, 0x25};
@@ -110,7 +110,6 @@ UBYTE is_round_over();
 void incr_frame_counter(UINT8 framelimit);
 void begin_round();
 void start_game();
-void intro_screen();
 void animate_coin_spin();
 void move_coin_cursor(INT8 direction, UINT8 fstmenuind, UINT8 lastmenuind);
 void main_menu();
@@ -518,43 +517,6 @@ void start_game() {
     stop_song();
     fade_to_black();
     HIDE_WIN; // Remove HUD before going back to the main menu
-    clear_sprite_tiles();
-}
-
-
-void intro_screen() {
-    fill_bkg_rect(0, 0, 20, 18, blanktile);
-    set_bkg_tiles(6, 3, 7, 1, introcreated);
-    set_bkg_tiles(9, 5, 2, 1, introby);
-    set_sprite_data(0, 36, speedpfonttiles);
-    move_sprite(0, 168, 80);
-
-    for(i = 0; i < 16; i++) {
-        set_sprite_tile(i, intronamesprites[i]);
-        set_sprite_prop(i, 0x20);
-        if(i < 10) {
-            move_sprite(i, 168, 80);
-            j = i + 5;
-        } else {
-            move_sprite(i, 168, 96);
-            j = i - 3;
-        }
-
-        while(j < 20) {
-            scroll_sprite(i, -8, 0);
-            wait_vbl_done();
-            j++;
-        }
-    }
-    for(k = 0; k < 16; k++) {
-        set_sprite_prop(k, 0x00);
-        custom_delay(4);
-    }
-
-    custom_delay(20);
-    set_bkg_tiles(8, 14, 4, 1, introyear);
-    custom_delay(60);
-    fade_to_black();
     clear_sprite_tiles();
 }
 
@@ -983,6 +945,7 @@ void stop_song() {
 
 
 void main() {
+    BGP_REG = 0xFF;
     DISPLAY_ON;
     SHOW_BKG;
     SHOW_SPRITES;
@@ -992,7 +955,6 @@ void main() {
     NR50_REG = 0x77; // Max level, left and right
 
     set_game_font();
-    intro_screen();
     default_settings();
 
     while(1) {
